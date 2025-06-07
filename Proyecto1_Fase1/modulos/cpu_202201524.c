@@ -1,4 +1,4 @@
-#include <linux/kernel_stat.h>  // Para kcpustat_cpu
+#include <linux/kernel_stat.h>
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <linux/sched.h>
@@ -13,7 +13,7 @@ MODULE_DESCRIPTION("Modulo Para Obtener Informacion De La CPU");
 MODULE_VERSION("1.0");
 
 static int cpu_show(struct seq_file *m, void *v) {
-    u64 user = 0, nice = 0, system = 0, idle = 0;
+    u64 user = 0, nice = 0, system = 0, idle = 0, iowait = 0, irq = 0, softirq = 0;
     int i;
 
     for_each_online_cpu(i) {
@@ -21,10 +21,13 @@ static int cpu_show(struct seq_file *m, void *v) {
         nice += kcpustat_cpu(i).cpustat[CPUTIME_NICE];
         system += kcpustat_cpu(i).cpustat[CPUTIME_SYSTEM];
         idle += kcpustat_cpu(i).cpustat[CPUTIME_IDLE];
+        iowait += kcpustat_cpu(i).cpustat[CPUTIME_IOWAIT];
+        irq += kcpustat_cpu(i).cpustat[CPUTIME_IRQ];
+        softirq += kcpustat_cpu(i).cpustat[CPUTIME_SOFTIRQ];
     }
 
-    u64 total = user + nice + system + idle;
-    u64 used = user + nice + system;
+    u64 total = user + nice + system + idle + iowait + irq + softirq;
+    u64 used = total - idle;
     u64 porcentaje = 0;
 
     if (total > 0) {
