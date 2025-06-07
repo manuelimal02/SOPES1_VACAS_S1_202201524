@@ -97,7 +97,7 @@ func main() {
 	app := fiber.New()
 
 	// Endpoint para RAM
-	app.Get("/api/ram", func(c *fiber.Ctx) error {
+	app.Get("/recolector/ram_202201524", func(c *fiber.Ctx) error {
 		select {
 		case ram := <-ramChan:
 			return c.JSON(ram)
@@ -107,7 +107,7 @@ func main() {
 	})
 
 	// Endpoint para CPU
-	app.Get("/api/cpu", func(c *fiber.Ctx) error {
+	app.Get("/recolector/cpu_202201524", func(c *fiber.Ctx) error {
 		select {
 		case cpu := <-cpuChan:
 			return c.JSON(cpu)
