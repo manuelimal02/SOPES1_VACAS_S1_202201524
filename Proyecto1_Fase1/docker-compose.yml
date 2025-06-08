@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container-proyecto
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: manuellima123
+      MYSQL_DATABASE: proyecto1_fase1
+      MYSQL_USER: manuel_lima
+      MYSQL_PASSWORD: manuel123
+    ports:
+      - "3306:3306"
+    volumes:
+      # Volumen para datos persistentes
+      - mysql_proyecto_data:/var/lib/mysql
+    networks:
+      - proyecto_network
+    command: --default-authentication-plugin=mysql_native_password
+
+# Definir volúmenes
+volumes:
+  mysql_proyecto_data:
+    driver: local
+
+# Definir redes
+networks:
+  proyecto_network:
+    driver: bridge
