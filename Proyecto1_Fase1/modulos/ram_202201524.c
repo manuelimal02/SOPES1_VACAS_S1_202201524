@@ -17,16 +17,16 @@ static int ram_show(struct seq_file *m, void *v) {
     struct sysinfo si;
     si_meminfo(&si);
 
-    // Calcular valores directamente en KB
-    unsigned long total_kb = si.totalram * 4;
-    unsigned long free_kb = si.freeram * 4;
-    unsigned long used_kb = total_kb - free_kb;
-    unsigned long percentage = (used_kb * 100) / total_kb;
+    // Calcular valores directamente en MB
+    unsigned long total_ram_mb = (si.totalram * PAGE_SIZE) >> 20;
+    unsigned long free_ram_mb = (si.freeram * PAGE_SIZE) >> 20;
+    unsigned long used_ram_mb = total_ram_mb - free_ram_mb;
+    unsigned long percentage = (used_ram_mb * 100) / total_ram_mb;
 
     seq_printf(m, "{\n");
-    seq_printf(m, "  \"Total\": %lu,\n", total_kb);
-    seq_printf(m, "  \"Libre\": %lu,\n", free_kb);
-    seq_printf(m, "  \"Usado\": %lu,\n", used_kb);
+    seq_printf(m, "  \"Total\": %lu,\n", total_ram_mb);
+    seq_printf(m, "  \"Libre\": %lu,\n", free_ram_mb);
+    seq_printf(m, "  \"Usado\": %lu,\n", used_ram_mb);
     seq_printf(m, "  \"PorcentajeUso\": %lu\n", percentage);
     seq_printf(m, "}\n");
 

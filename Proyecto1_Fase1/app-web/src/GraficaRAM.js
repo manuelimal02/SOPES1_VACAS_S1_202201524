@@ -20,12 +20,14 @@ const ApexChartRAM = ({ title, labels, series, totalGB, porcentajeUso }) => {
         donut: {
           labels: {
             show: true,
-            name: { show: true },
-            value: { show: true },
+            name: { show: true, fontSize: '16px', fontWeight: 600 },
+            value: { show: true, fontSize: '16px', fontWeight: 500 },
             total: {
               showAlways: true,
               show: true,
               label: "Total (GB)",
+              fontSize: '16px',
+              fontWeight: 600,
               formatter: () => totalGB?.toFixed(3) || "0.000"
             }
           }
@@ -34,28 +36,49 @@ const ApexChartRAM = ({ title, labels, series, totalGB, porcentajeUso }) => {
     },
     labels,
     fill: {
-      type: 'pattern',
-      opacity: 1,
-      pattern: {
-        enabled: true,
-        style: ['verticalLines', 'squares']
-      },
+      type: 'solid',
+      colors: ['#1E90FF', '#8e44ad'],
     },
-    theme: { palette: 'palette2' },
-    title: { text: title },
-    responsive: [{
-      breakpoint: 480,
-      options: {
-        chart: { width: 200 },
-        legend: { position: 'bottom' }
+    theme: {
+      palette: 'palette2'
+    },
+    title: {
+      text: title,
+      align: 'center',
+      style: {
+        fontSize: '22px',
+        fontWeight: 'bold'
       }
-    }]
+    },
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'center',
+      fontSize: '16px',
+      fontWeight: 500
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: { width: 250 },
+          legend: { position: 'bottom' }
+        }
+      }
+    ]
   };
 
   return (
     <div style={{ textAlign: 'center' }}>
       <ReactApexChart options={options} series={series} type="donut" width={600} />
-      <p style={{ marginTop: '0.5rem', fontWeight: 'bold'}}>Uso: {porcentajeUso}%</p>
+      <p style={{
+        marginTop: '1rem',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: '#333'
+      }}>
+        Uso: {porcentajeUso}%
+      </p>
     </div>
   );
 };

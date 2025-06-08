@@ -40,10 +40,10 @@
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s ease;
-    background-color: #e67e22;
+    background-color: #9b59b6 ;
 }
 .btn-ram:hover {
-    background-color: #d35400;
+    background-color: #8e44ad ;
 }
 
 .btn-cpu {
@@ -53,10 +53,10 @@
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s ease;
-    background-color: #9b59b6;
+    background-color: #e67e22;
 }
 .btn-cpu:hover {
-    background-color: #8e44ad;
+    background-color: #d35400;
 }
 
 .chart-container {

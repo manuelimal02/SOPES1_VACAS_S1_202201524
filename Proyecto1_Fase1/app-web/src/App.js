@@ -39,9 +39,9 @@ function App() {
         const data = await res.json();
         
         // Procesar Datos de RAM
-        const totalGB = +(data.RAM.Total / 1024 / 1024).toFixed(3);
-        const usadoGB = +(data.RAM.Usado / 1024 / 1024).toFixed(3);
-        const libreGB = +(data.RAM.Libre / 1024 / 1024).toFixed(3);
+        const totalGB = +(data.RAM.Total / 1024).toFixed(3);
+        const usadoGB = +(data.RAM.Usado / 1024).toFixed(3);
+        const libreGB = +(data.RAM.Libre / 1024).toFixed(3);
         const porcentajeUso = data.RAM.PorcentajeUso;
 
         setRamData({

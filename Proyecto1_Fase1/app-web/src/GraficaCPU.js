@@ -1,6 +1,8 @@
 import ReactApexChart from 'react-apexcharts';
 
 const ApexChartCPU = ({ title, labels, series }) => {
+  const totalPorcentaje = series.reduce((acc, val) => acc + val, 0);
+
   const options = {
     chart: {
       width: 380,
@@ -20,9 +22,23 @@ const ApexChartCPU = ({ title, labels, series }) => {
         donut: {
           labels: {
             show: true,
+            name: {
+              show: true,
+              fontSize: '16px',
+              fontWeight: 600
+            },
+            value: {
+              show: true,
+              fontSize: '16px',
+              fontWeight: 500
+            },
             total: {
               showAlways: true,
-              show: true
+              show: true,
+              label: "Total (%)",
+              fontSize: '18px',
+              fontWeight: 600,
+              formatter: () => `${totalPorcentaje}`
             }
           }
         }
@@ -30,34 +46,37 @@ const ApexChartCPU = ({ title, labels, series }) => {
     },
     labels: labels,
     fill: {
-      type: 'pattern',
-      opacity: 1,
-      pattern: {
-        enabled: true,
-        style: ['verticalLines', 'squares']
-      },
+      type: 'solid',
+      colors: ['#e67e22', '#FFD700']
     },
     theme: {
       palette: 'palette2'
     },
     title: {
-      text: title
+      text: title, // Sin el símbolo %
+      align: 'center',
+      style: {
+        fontSize: '22px',
+        fontWeight: 'bold'
+      }
+    },
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'center',
+      fontSize: '16px'
     },
     responsive: [{
       breakpoint: 480,
       options: {
-        chart: {
-          width: 200
-        },
-        legend: {
-          position: 'bottom'
-        }
+        chart: { width: 250 },
+        legend: { position: 'bottom' }
       }
     }]
   };
 
   return (
-    <div>
+    <div style={{ textAlign: 'center' }}>
       <ReactApexChart options={options} series={series} type="donut" width={600} />
     </div>
   );
