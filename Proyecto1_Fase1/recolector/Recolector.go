@@ -12,7 +12,7 @@ import (
 
 // Estructura para almacenar datos de CPU
 type CPUData struct {
-	PorcentajeUso uint64
+	PorcentajeUso float64
 }
 
 // Estructura para almacenar datos de RAM
@@ -75,7 +75,7 @@ func readCPUData() {
 		for scanner.Scan() {
 			line := scanner.Text()
 			if strings.Contains(line, "PorcentajeUso") {
-				fmt.Sscanf(line, "  \"PorcentajeUso\": %d", &cpu.PorcentajeUso)
+				fmt.Sscanf(line, "  \"PorcentajeUso\": \"%f\"", &cpu.PorcentajeUso)
 				break
 			}
 		}

@@ -11,7 +11,7 @@ app.use(cors());
 let UltimosDatosRAM = null;
 let UltimosDatosCPU = null;
 
-const dbConfig = {
+const ConfigBD = {
   host: 'localhost',
   port: 3306,
   user: 'root',
@@ -19,21 +19,20 @@ const dbConfig = {
   database: 'proyecto1_fase1'
 };
 
-// Función para crear conexión a la base de datos
-async function createConnection() {
+
+async function EstablecerConexionBD() {
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    return connection;
+    const ConexionBD = await mysql.EstablecerConexionBD(ConfigBD);
+    return ConexionBD;
   } catch (error) {
-    console.error('Error conectando a la base de datos:', error);
+    console.error('Error Conectando a La Base De Datos:', error);
     throw error;
   }
 }
 
-// Función para insertar datos de RAM en la base de datos
-async function insertarDatosRAM(datosRAM) {
+async function InsercionDatosRAM(datosRAM) {
   try {
-    const connection = await createConnection();
+    const ConexionBD = await EstablecerConexionBD();
     
     const query = `INSERT INTO DatosRAM (Total, Libre, Usado, PorcentajeUso) VALUES (?, ?, ?, ?)`;
     const values = [
@@ -42,52 +41,51 @@ async function insertarDatosRAM(datosRAM) {
       datosRAM.Usado || 'N/A',
       datosRAM.PorcentajeUso || 'N/A'
     ];
-    const [result] = await connection.execute(query, values);
-    await connection.end();
-    console.log(`Datos RAM insertados correctamente - ID: ${result.insertId}`);
+    const [result] = await ConexionBD.execute(query, values);
+    await ConexionBD.end();
+    console.log(`Datos RAM Insertados Correctamente - ID: ${result.insertId}`);
     return result.insertId;
+
   } catch (error) {
-    console.error('Error al insertar datos RAM:', error.message);
+    console.error('Error Al Insertar Datos RAM:', error.message);
     throw error;
   }
 }
 
-// Función para insertar datos de CPU en la base de datos
-async function insertarDatosCPU(datosCPU) {
+async function InsercionDatosCPU(datosCPU) {
   try {
-    const connection = await createConnection();
+    const ConexionBD = await EstablecerConexionBD();
     
     const query = `INSERT INTO DatosCPU (PorcentajeUso) VALUES (?)`;
     
     const values = [ datosCPU.PorcentajeUso || 'N/A'];
     
-    const [result] = await connection.execute(query, values);
-    await connection.end();
+    const [result] = await ConexionBD.execute(query, values);
+    await ConexionBD.end();
     
-    console.log(`Datos CPU insertados correctamente - ID: ${result.insertId}`);
+    console.log(`Datos CPU Insertados Correctamente - ID: ${result.insertId}`);
     return result.insertId;
   } catch (error) {
-    console.error('Error al insertar datos CPU:', error.message);
+    console.error('Error Al Insertar Datos CPU:', error.message);
     throw error;
   }
 }
 
-// Función para obtener datos del agente Go
-const fetchMetrics = async () => {
+const ObtenerMetricas = async () => {
   try {
-    const [ramRes, cpuRes] = await Promise.all([
+    const [RestultadoRAM, RestultadoCPU] = await Promise.all([
       axios.get('http://localhost:3000/recolector/ram_202201524'),
       axios.get('http://localhost:3000/recolector/cpu_202201524')
     ]);
-    UltimosDatosRAM = ramRes.data;
-    UltimosDatosCPU = cpuRes.data;
+    UltimosDatosRAM = RestultadoRAM.data;
+    UltimosDatosCPU = RestultadoCPU.data;
     
     try {
       await Promise.all([
-        insertarDatosRAM(UltimosDatosRAM),
-        insertarDatosCPU(UltimosDatosCPU)
+        InsercionDatosRAM(UltimosDatosRAM),
+        InsercionDatosCPU(UltimosDatosCPU)
       ]);
-      console.log('Datos guardados en la base de datos exitosamente');
+      console.log('Datos Insertados Correctamente en la Base de Datos');
     } catch (dbError) {
       console.error('Error al guardar en base de datos:', dbError.message);
     }
@@ -98,7 +96,7 @@ const fetchMetrics = async () => {
   }
 };
 
-setInterval(fetchMetrics, 5000);
+setInterval(ObtenerMetricas, 2000);
 
 app.get('/api/metricas', (req, res) => {
   res.json({

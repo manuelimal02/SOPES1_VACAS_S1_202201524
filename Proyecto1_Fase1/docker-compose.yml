@@ -10,11 +10,15 @@ services:
       MYSQL_DATABASE: proyecto1_fase1
       MYSQL_USER: manuel_lima
       MYSQL_PASSWORD: manuel123
+      TZ: America/Guatemala
     ports:
       - "3306:3306"
     volumes:
       # Volumen para datos persistentes
       - mysql_proyecto_data:/var/lib/mysql
+      # Sincronizar zona horaria con el sistema host
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - proyecto_network
     command: --default-authentication-plugin=mysql_native_password

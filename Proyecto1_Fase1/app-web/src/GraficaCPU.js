@@ -53,7 +53,7 @@ const ApexChartCPU = ({ title, labels, series }) => {
       palette: 'palette2'
     },
     title: {
-      text: title, // Sin el símbolo %
+      text: title,
       align: 'center',
       style: {
         fontSize: '22px',
