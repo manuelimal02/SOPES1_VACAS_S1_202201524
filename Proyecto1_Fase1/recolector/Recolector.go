@@ -117,7 +117,7 @@ func main() {
 	})
 
 	// Iniciar servidor
-	err := app.Listen(":3000")
+	err := app.Listen(":6000")
 	if err != nil {
 		fmt.Println("Error al iniciar el servidor:", err)
 	}

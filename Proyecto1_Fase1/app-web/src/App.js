@@ -3,7 +3,6 @@ import './App.css';
 import GraficaCPU from './GraficaCPU';
 import GraficaRAM from './GraficaRAM';
 
-
 const Navbar = ({ setSelectedChart }) => (
   <nav className="navbar">
     <h2>Monitor De Servicios Linux - Proyecto Fase 1</h2>
@@ -33,9 +32,11 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-
+        // URL de la API - usa localhost para acceso desde navegador
+        const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+        
         // Realizar La Solicitud A La API
-        const res = await fetch("http://localhost:4000/api/metricas");
+        const res = await fetch(`${API_URL}/api/metricas`);
         const data = await res.json();
         
         // Procesar Datos de RAM

@@ -1,28 +1,33 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors')
 const mysql = require('mysql2/promise');
 
 const app = express();
-const PORT = 4000;
+
+const PORT = process.env.NODE_PORT;
 
 app.use(cors());
 
 let UltimosDatosRAM = null;
 let UltimosDatosCPU = null;
 
+// Variables De Entorno Base De Datos
 const ConfigBD = {
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: 'manuellima123',
-  database: 'proyecto1_fase1'
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 };
 
+// Variable De Entorno Go
+const GO_URL = `http://${process.env.GO_HOST}:${process.env.GO_PORT}`;
 
 async function EstablecerConexionBD() {
   try {
-    const ConexionBD = await mysql.EstablecerConexionBD(ConfigBD);
+    const ConexionBD = await mysql.createConnection(ConfigBD);
     return ConexionBD;
   } catch (error) {
     console.error('Error Conectando a La Base De Datos:', error);
@@ -30,16 +35,16 @@ async function EstablecerConexionBD() {
   }
 }
 
-async function InsercionDatosRAM(datosRAM) {
+async function InsertarDatosRAM(datosRAM) {
   try {
     const ConexionBD = await EstablecerConexionBD();
     
     const query = `INSERT INTO DatosRAM (Total, Libre, Usado, PorcentajeUso) VALUES (?, ?, ?, ?)`;
     const values = [
-      datosRAM.Total || 'N/A',
-      datosRAM.Libre || 'N/A', 
-      datosRAM.Usado || 'N/A',
-      datosRAM.PorcentajeUso || 'N/A'
+      datosRAM.Total,
+      datosRAM.Libre, 
+      datosRAM.Usado,
+      datosRAM.PorcentajeUso
     ];
     const [result] = await ConexionBD.execute(query, values);
     await ConexionBD.end();
@@ -52,13 +57,13 @@ async function InsercionDatosRAM(datosRAM) {
   }
 }
 
-async function InsercionDatosCPU(datosCPU) {
+async function InsertarDatosCPU(datosCPU) {
   try {
     const ConexionBD = await EstablecerConexionBD();
     
     const query = `INSERT INTO DatosCPU (PorcentajeUso) VALUES (?)`;
     
-    const values = [ datosCPU.PorcentajeUso || 'N/A'];
+    const values = [datosCPU.PorcentajeUso];
     
     const [result] = await ConexionBD.execute(query, values);
     await ConexionBD.end();
@@ -74,18 +79,17 @@ async function InsercionDatosCPU(datosCPU) {
 const ObtenerMetricas = async () => {
   try {
     const [RestultadoRAM, RestultadoCPU] = await Promise.all([
-      axios.get('http://localhost:3000/recolector/ram_202201524'),
-      axios.get('http://localhost:3000/recolector/cpu_202201524')
+      axios.get(`${GO_URL}/recolector/ram_202201524`),
+      axios.get(`${GO_URL}/recolector/cpu_202201524`)
     ]);
     UltimosDatosRAM = RestultadoRAM.data;
     UltimosDatosCPU = RestultadoCPU.data;
     
     try {
       await Promise.all([
-        InsercionDatosRAM(UltimosDatosRAM),
-        InsercionDatosCPU(UltimosDatosCPU)
+        InsertarDatosRAM(UltimosDatosRAM),
+        InsertarDatosCPU(UltimosDatosCPU)
       ]);
-      console.log('Datos Insertados Correctamente en la Base de Datos');
     } catch (dbError) {
       console.error('Error al guardar en base de datos:', dbError.message);
     }
