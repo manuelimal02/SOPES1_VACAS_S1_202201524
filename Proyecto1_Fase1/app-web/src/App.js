@@ -32,13 +32,8 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // URL de la API - usa localhost para acceso desde navegador
-        const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
-        
-        // Realizar La Solicitud A La API
-        const res = await fetch(`${API_URL}/api/metricas`);
+        const res = await fetch(`http://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}/api/metricas`);
         const data = await res.json();
-        
         // Procesar Datos de RAM
         const totalGB = +(data.RAM.Total / 1024).toFixed(3);
         const usadoGB = +(data.RAM.Usado / 1024).toFixed(3);
