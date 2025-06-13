@@ -1,37 +1,33 @@
 #!/bin/bash
 
-# Script para compilar y cargar módulos del kernel en /proc
-
-# Verificar si el script se ejecuta con permisos de superusuario
 if [ "$EUID" -ne 0 ]; then
-    echo "Error: Este script debe ejecutarse como root (use sudo)."
+    echo "Error: Este Script Debe Ejecutarse Como Root (Sudo)."
     exit 1
 fi
 
-# Directorio de los módulos
+# Directorio De Los Módulos
 MODULE_DIR="$(dirname "$PWD")/modulos"
 
-# Lista de módulos
+# Lista De Módulos A Crear
 MODULES=("cpu_202201524" "ram_202201524")
 
-# Función para verificar éxito de comandos
 check_status() {
     if [ $? -ne 0 ]; then
-        echo "Error: $1 falló."
+        echo "Error: '$1' Falló."
         exit 1
     fi
 }
 
-# Compilar los módulos
-cd "$MODULE_DIR" || { echo "Error: No se pudo acceder al directorio $MODULE_DIR."; exit 1; }
-echo "Compilando los módulos del kernel..."
+# Compilar Los Módulos
+cd "$MODULE_DIR" || { echo "Error: No Se Pudo Acceder A: $MODULE_DIR."; exit 1; }
+echo "Compilando Los Módulos Del kernel."
 make clean
 make
-check_status "Compilación de módulos"
+check_status "Compilación De Módulos"
 
-# Regresar al directorio original y cargar módulos
+# Regresar Al Directorio Orginal y Cargar Los Módulos
 cd - > /dev/null
-echo "Cargando los módulos del kernel..."
+echo "Cargando Los Módulos Del kernel."
 for module in "${MODULES[@]}"; do
     if lsmod | grep -q "$module"; then
         echo "Módulo $module ya está cargado, intentando recargarlo..."
@@ -42,7 +38,7 @@ for module in "${MODULES[@]}"; do
     check_status "Carga del módulo $module"
 done
 
-# Verificar módulos cargados
+# Verificar Que Los Módulos Están Cargados
 echo "Verificando módulos cargados..."
 for module in "${MODULES[@]}"; do
     if lsmod | grep -q "$module"; then
