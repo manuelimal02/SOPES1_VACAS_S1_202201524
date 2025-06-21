@@ -78,11 +78,11 @@ static int process_show(struct seq_file *m, void *v) {
     mutex_unlock(&process_mutex);
     
     seq_printf(m, "{\n");
-    seq_printf(m, "  \"procesos_corriendo\": %lu,\n", stats.running);
-    seq_printf(m, "  \"total_procesos\": %lu,\n", stats.total);
-    seq_printf(m, "  \"procesos_durmiendo\": %lu,\n", stats.sleeping);
-    seq_printf(m, "  \"procesos_zombie\": %lu,\n", stats.zombie);
-    seq_printf(m, "  \"procesos_parados\": %lu\n", stats.stopped);
+    seq_printf(m, "  \"TotalProcesos\": %lu,\n", stats.total);
+    seq_printf(m, "  \"ProcesosCorriendo\": %lu,\n", stats.running);
+    seq_printf(m, "  \"ProcesosDurmiendo\": %lu,\n", stats.sleeping);
+    seq_printf(m, "  \"ProcesosZombie\": %lu,\n", stats.zombie);
+    seq_printf(m, "  \"ProcesosParados\": %lu\n", stats.stopped);
     seq_printf(m, "}\n");
     
     return 0;

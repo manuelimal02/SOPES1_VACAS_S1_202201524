@@ -10,8 +10,7 @@ const PORT = process.env.NODE_PORT;
 
 app.use(cors());
 
-let UltimosDatosRAM = null;
-let UltimosDatosCPU = null;
+let MetricasRecibidas = null;
 
 // Variables De Entorno Base De Datos
 const ConfigBD = {
@@ -57,44 +56,23 @@ async function InsertarDatosRAM(datosRAM) {
   }
 }
 
-async function InsertarDatosCPU(datosCPU) {
-  try {
-    const ConexionBD = await EstablecerConexionBD();
-    
-    const query = `INSERT INTO DatosCPU (PorcentajeUso) VALUES (?)`;
-    
-    const values = [datosCPU.PorcentajeUso];
-    
-    const [result] = await ConexionBD.execute(query, values);
-    await ConexionBD.end();
-    
-    console.log(`Datos CPU Insertados Correctamente - ID: ${result.insertId}`);
-    return result.insertId;
-  } catch (error) {
-    console.error('Error Al Insertar Datos CPU:', error.message);
-    throw error;
-  }
-}
-
 const ObtenerMetricas = async () => {
   try {
-    const [RestultadoRAM, RestultadoCPU] = await Promise.all([
-      axios.get(`${GO_URL}/recolector/ram_202201524`),
-      axios.get(`${GO_URL}/recolector/cpu_202201524`)
+    const [RestultadoRAM] = await Promise.all([
+      axios.get(`${GO_URL}/recolector/data_202201524`),
     ]);
-    UltimosDatosRAM = RestultadoRAM.data;
-    UltimosDatosCPU = RestultadoCPU.data;
+    MetricasRecibidas = RestultadoRAM.data;
     
-    try {
-      await Promise.all([
-        InsertarDatosRAM(UltimosDatosRAM),
-        InsertarDatosCPU(UltimosDatosCPU)
-      ]);
-    } catch (dbError) {
-      console.error('Error al guardar en base de datos:', dbError.message);
-    }
+    //try {
+    //  await Promise.all([
+    //    InsertarDatosRAM(MetricasRecibidas),
+    //    InsertarDatosCPU(UltimosDatosCPU)
+    //  ]);
+    //} catch (dbError) {
+    //  console.error('Error al guardar en base de datos:', dbError.message);
+    //}
 
-    console.log('Metricas De RAM y CPU Actualizadas Correctamente');
+    console.log('Metricas De RAM, CPU y Procesos Actualizadas Correctamente');
   } catch (error) {
     console.error('Error al obtener métricas:', error.message);
   }
@@ -104,8 +82,7 @@ setInterval(ObtenerMetricas, 2000);
 
 app.get('/api/metricas', (req, res) => {
   res.json({
-    RAM: UltimosDatosRAM,
-    CPU: UltimosDatosCPU
+    MetricasRecibidas
   });
 });
 
