@@ -34,57 +34,72 @@ async function EstablecerConexionBD() {
   }
 }
 
-async function InsertarDatosRAM(datosRAM) {
+
+async function InsertarMetricas(metrica) {
   try {
     const ConexionBD = await EstablecerConexionBD();
     
-    const query = `INSERT INTO DatosRAM (Total, Libre, Usado, PorcentajeUso) VALUES (?, ?, ?, ?)`;
+    const query = `INSERT INTO Metrica (
+        TotalRam, 
+        RamLibre, 
+        UsoRam, 
+        PorcentajeRam,
+        PorcentajeCPUUso, 
+        PorcentajeCPULibre,
+        ProcesosCorriendo, 
+        TotalProcesos,
+        ProcesosDurmiendo, 
+        ProcesosZombie,
+        ProcesosParados, 
+        HoraFecha
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
     const values = [
-      datosRAM.Total,
-      datosRAM.Libre, 
-      datosRAM.Usado,
-      datosRAM.PorcentajeUso
+      metrica.TotalRam,
+      metrica.RamLibre,
+      metrica.UsoRam,
+      metrica.PorcentajeRam,
+      metrica.PorcentajeCPUUso,
+      metrica.PorcentajeCPULibre,
+      metrica.ProcesosCorriendo,
+      metrica.TotalProcesos,
+      metrica.ProcesosDurmiendo,
+      metrica.ProcesosZombie,
+      metrica.ProcesosParados,
+      metrica.HoraFecha
     ];
+
     const [result] = await ConexionBD.execute(query, values);
     await ConexionBD.end();
-    console.log(`Datos RAM Insertados Correctamente - ID: ${result.insertId}`);
+    console.log(`Métricas Insertadas Correctamente - ID: ${result.insertId}`);
     return result.insertId;
 
   } catch (error) {
-    console.error('Error Al Insertar Datos RAM:', error.message);
+    console.error('Error Al Insertar Métricas:', error.message);
     throw error;
   }
 }
 
 const ObtenerMetricas = async () => {
   try {
-    const [RestultadoRAM] = await Promise.all([
+    const [ResultadoMetricas] = await Promise.all([
       axios.get(`${GO_URL}/recolector/data_202201524`),
     ]);
-    MetricasRecibidas = RestultadoRAM.data;
+    MetricasRecibidas = ResultadoMetricas.data;
     
-    //try {
-    //  await Promise.all([
-    //    InsertarDatosRAM(MetricasRecibidas),
-    //    InsertarDatosCPU(UltimosDatosCPU)
-    //  ]);
-    //} catch (dbError) {
-    //  console.error('Error al guardar en base de datos:', dbError.message);
-    //}
+    try {
+      await Promise.all([
+        InsertarMetricas(MetricasRecibidas),
+      ]);
+    } catch (dbError) {
+      console.error('Error al guardar en base de datos:', dbError.message);
+    }
 
     console.log('Metricas De RAM, CPU y Procesos Actualizadas Correctamente');
   } catch (error) {
     console.error('Error al obtener métricas:', error.message);
   }
 };
-
-setInterval(ObtenerMetricas, 2000);
-
-app.get('/api/metricas', (req, res) => {
-  res.json({
-    MetricasRecibidas
-  });
-});
 
 app.listen(PORT, () => {
   console.log(`API Node Escuchando en http://localhost:${PORT}`);

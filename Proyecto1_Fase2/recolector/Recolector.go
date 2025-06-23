@@ -39,8 +39,8 @@ type DatosCompletos struct {
 	PorcentajeRam      uint64
 	PorcentajeCPUUso   float64
 	PorcentajeCPULibre float64
-	ProcesosCorriendo  uint64
 	TotalProcesos      uint64
+	ProcesosCorriendo  uint64
 	ProcesosDurmiendo  uint64
 	ProcesosZombie     uint64
 	ProcesosParados    uint64
