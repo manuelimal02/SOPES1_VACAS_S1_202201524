@@ -47,10 +47,10 @@ type DatosCompletos struct {
 	HoraFecha          string
 }
 
-// Canales para enviar datos
-var cpuChan = make(chan CPUData)
-var ramChan = make(chan RAMData)
-var processChan = make(chan ProcesoData)
+// Canales con buffer para manejar múltiples requests
+var cpuChan = make(chan CPUData, 100)
+var ramChan = make(chan RAMData, 100)
+var processChan = make(chan ProcesoData, 100)
 
 // Función para leer datos de RAM de forma concurrente
 func readRAMData() {
@@ -80,8 +80,14 @@ func readRAMData() {
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Error al leer /proc/ram_202201524:", err)
 		}
-		ramChan <- ram
-		time.Sleep(time.Second)
+		// Enviar datos múltiples veces al canal buffer
+		for i := 0; i < 10; i++ {
+			select {
+			case ramChan <- ram:
+			default:
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -108,8 +114,14 @@ func readCPUData() {
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Error al leer /proc/cpu_202201524:", err)
 		}
-		cpuChan <- cpu
-		time.Sleep(time.Second)
+		// Enviar datos múltiples veces al canal buffer
+		for i := 0; i < 10; i++ {
+			select {
+			case cpuChan <- cpu:
+			default:
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -143,8 +155,14 @@ func readProcessData() {
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Error al leer /proc/procesos_202201524:", err)
 		}
-		processChan <- process
-		time.Sleep(time.Second)
+		// Enviar datos múltiples veces al canal buffer
+		for i := 0; i < 10; i++ {
+			select {
+			case processChan <- process:
+			default:
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -157,38 +175,8 @@ func main() {
 	// Crear aplicación Fiber
 	app := fiber.New()
 
-	// Endpoint para RAM
-	app.Get("/recolector/ram_202201524", func(c *fiber.Ctx) error {
-		select {
-		case ram := <-ramChan:
-			return c.JSON(ram)
-		case <-time.After(time.Second):
-			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de RAM"})
-		}
-	})
-
-	// Endpoint para CPU
-	app.Get("/recolector/cpu_202201524", func(c *fiber.Ctx) error {
-		select {
-		case cpu := <-cpuChan:
-			return c.JSON(cpu)
-		case <-time.After(time.Second):
-			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de CPU"})
-		}
-	})
-
-	// Endpoint para Procesos
-	app.Get("/recolector/procesos_202201524", func(c *fiber.Ctx) error {
-		select {
-		case process := <-processChan:
-			return c.JSON(process)
-		case <-time.After(time.Second):
-			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de Procesos"})
-		}
-	})
-
 	// Endpoint para obtener todos los datos
-	app.Get("/recolector/data_202201524", func(c *fiber.Ctx) error {
+	app.Get("/recolector/metrica_202201524", func(c *fiber.Ctx) error {
 		var Buffer DatosCompletos
 		// Obtener datos de RAM
 		select {
@@ -197,7 +185,7 @@ func main() {
 			Buffer.RamLibre = ram.Libre
 			Buffer.UsoRam = ram.Usado
 			Buffer.PorcentajeRam = ram.PorcentajeUso
-		case <-time.After(5 * time.Second):
+		case <-time.After(2 * time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de RAM"})
 		}
 		// Obtener datos de CPU
@@ -205,7 +193,7 @@ func main() {
 		case cpu := <-cpuChan:
 			Buffer.PorcentajeCPUUso = cpu.PorcentajeUso
 			Buffer.PorcentajeCPULibre = 100.0 - cpu.PorcentajeUso
-		case <-time.After(5 * time.Second):
+		case <-time.After(2 * time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de CPU"})
 		}
 		// Obtener datos de Procesos
@@ -216,7 +204,7 @@ func main() {
 			Buffer.ProcesosDurmiendo = process.ProcesosDurmiendo
 			Buffer.ProcesosZombie = process.ProcesosZombie
 			Buffer.ProcesosParados = process.ProcesosParados
-		case <-time.After(5 * time.Second):
+		case <-time.After(2 * time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de Procesos"})
 		}
 		Buffer.HoraFecha = time.Now().Format("2006-01-02 15:04:05")
