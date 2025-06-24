@@ -1,18 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors')
+const cors = require('cors');
 const mysql = require('mysql2/promise');
 
 const app = express();
-
 const PORT = process.env.NODE_PORT;
 
 app.use(cors());
+app.use(express.json());
 
 let MetricasRecibidas = null;
 
-// Variables De Entorno Base De Datos
 const ConfigBD = {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -20,9 +19,6 @@ const ConfigBD = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME
 };
-
-// Variable De Entorno Go
-const GO_URL = `http://${process.env.GO_HOST}:${process.env.GO_PORT}`;
 
 async function EstablecerConexionBD() {
   try {
@@ -34,12 +30,13 @@ async function EstablecerConexionBD() {
   }
 }
 
-
 async function InsertarMetricas(metrica) {
+  let ConexionBD;
   try {
-    const ConexionBD = await EstablecerConexionBD();
+    ConexionBD = await EstablecerConexionBD();
     
     const query = `INSERT INTO Metrica (
+        API,
         TotalRam, 
         RamLibre, 
         UsoRam, 
@@ -52,9 +49,10 @@ async function InsertarMetricas(metrica) {
         ProcesosZombie,
         ProcesosParados, 
         HoraFecha
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const values = [
+      "API Node",
       metrica.TotalRam,
       metrica.RamLibre,
       metrica.UsoRam,
@@ -70,36 +68,33 @@ async function InsertarMetricas(metrica) {
     ];
 
     const [result] = await ConexionBD.execute(query, values);
-    await ConexionBD.end();
-    console.log(`Métricas Insertadas Correctamente - ID: ${result.insertId}`);
     return result.insertId;
 
   } catch (error) {
     console.error('Error Al Insertar Métricas:', error.message);
     throw error;
+  } finally {
+    if (ConexionBD) {
+      await ConexionBD.end();
+    }
   }
 }
 
-const ObtenerMetricas = async () => {
-  try {
-    const [ResultadoMetricas] = await Promise.all([
-      axios.get(`${GO_URL}/recolector/data_202201524`),
-    ]);
-    MetricasRecibidas = ResultadoMetricas.data;
-    
-    try {
-      await Promise.all([
-        InsertarMetricas(MetricasRecibidas),
-      ]);
-    } catch (dbError) {
-      console.error('Error al guardar en base de datos:', dbError.message);
-    }
+app.post('/metricas', async (req, res) => {
+  const metrica = req.body;
 
-    console.log('Metricas De RAM, CPU y Procesos Actualizadas Correctamente');
-  } catch (error) {
-    console.error('Error al obtener métricas:', error.message);
+  if (!metrica) {
+    return res.status(400).json({ error: 'Métricas No Proporcionadas.' });
   }
-};
+
+  try {
+    MetricasRecibidas = metrica;
+    const id = await InsertarMetricas(metrica);
+    res.status(200).json({ message: 'Métricas Recibidas E Insertadas.', "Id": id });
+  } catch (error) {
+    res.status(500).json({ error: 'Error Al Insertar Métricas.', detalle: error.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`API Node Escuchando en http://localhost:${PORT}`);
