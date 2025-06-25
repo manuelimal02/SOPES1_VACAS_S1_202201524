@@ -50,5 +50,5 @@ def on_test_start(environment, **kwargs):
     cargar_datos()
 
 if __name__ == "__main__":
-    # locust -f traffic_split.py --host=http://192.168.49.2 -u 150 -r 1 --headless -t 30s
+    # locust -f envio_metricas.py --host=http://192.168.49.2 -u 150 -r 1 --headless -t 30s
     pass

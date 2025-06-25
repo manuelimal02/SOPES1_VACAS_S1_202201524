@@ -47,7 +47,7 @@
 }
 
 .btn-cpu {
-        padding: 10px 15px;
+    padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -59,6 +59,19 @@
     background-color: #d35400;
 }
 
+.btn-proc {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    background-color: #16a085;
+}
+.btn-proc:hover {
+    background-color: #138d75;
+}
+
 .chart-container {
     display: flex;
     justify-content: center;
@@ -66,7 +79,6 @@
     gap: 30px;
     flex-wrap: wrap;
     margin-top: 40px;
-
     background-color: rgb(255, 255, 255);
     padding: 30px;
     border-radius: 16px;
@@ -75,6 +87,20 @@
 }
 
 .chart-container:hover {
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.procesos-container {
+    margin: 30px auto;
+    max-width: 800px;
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.procesos-container:hover {
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
 }
