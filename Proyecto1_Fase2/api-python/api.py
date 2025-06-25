@@ -1,12 +1,13 @@
 import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import mysql.connector
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
-
+CORS(app)
 
 db_config = {
     'host': os.getenv('DB_HOST'),

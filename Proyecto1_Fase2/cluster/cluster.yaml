@@ -1,0 +1,121 @@
+# ==========================================
+# 1. NAMESPACE - so1_Fase2 
+# ==========================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: so1-fase2
+
+---
+# ==========================================
+# 2. PYTHON API DEPLOYMENT 
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-api
+  namespace: so1-fase2
+  labels:
+    app: python-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-api
+  template:
+    metadata:
+      labels:
+        app: python-api
+        tier: api
+    spec:
+      containers:
+      - name: python-api
+        image: sopes1-f2-api-python:latest
+        ports:
+        - containerPort: 5000
+        imagePullPolicy: Never
+        env:
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "proyecto1_fase2"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "manuel123"
+
+---
+# Service para Python API
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-api-service
+  namespace: so1-fase2
+spec:
+  selector:
+    app: python-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: ClusterIP
+
+---
+# ==========================================
+# 3. NODEJS API DEPLOYMENT
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-api
+  namespace: so1-fase2
+  labels:
+    app: nodejs-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodejs-api
+  template:
+    metadata:
+      labels:
+        app: nodejs-api
+        tier: api 
+    spec:
+      containers:
+      - name: nodejs-api
+        image: sopes1-f2-api-node:latest
+        ports:
+        - containerPort: 5000
+        imagePullPolicy: Never
+        env:
+        - name: PORT
+          value: "5000" 
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "proyecto1_fase2"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "manuel123"
+
+---
+# Service para NodeJS API
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-api-service
+  namespace: so1-fase2
+spec:
+  selector:
+    app: nodejs-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000 
+  type: ClusterIP

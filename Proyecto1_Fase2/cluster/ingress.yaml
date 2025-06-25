@@ -1,0 +1,41 @@
+# ==========================================
+# TRAFFIC SPLIT INGRESS + BALANCED SERVICE
+# ==========================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traffic-split-ingress
+  namespace: so1-fase2
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /metricas
+        pathType: Prefix
+        backend:
+          service:
+            name: balanced-service
+            port:
+              number: 80
+
+---
+# SERVICE BALANCEADO - 50/50 entre APIs
+apiVersion: v1
+kind: Service
+metadata:
+  name: balanced-service
+  namespace: so1-fase2
+spec:
+  selector:
+    # Este selector captura AMBAS aplicaciones que tengan este label
+    tier: api
+  ports:
+  - port: 80
+    targetPort: 5000  # Puerto común para ambas APIs
+  sessionAffinity: None  # Sin afinidad de sesión para mejor balanceo 50/50
