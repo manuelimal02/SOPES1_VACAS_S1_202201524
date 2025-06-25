@@ -1,10 +1,12 @@
 # ==========================================
-# TRAFFIC SPLIT INGRESS + BALANCED SERVICE
+# Ingress + Traffic Split 
 # ==========================================
+
+# Ingress Para Python API
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: traffic-split-ingress
+  name: python-api-ingress
   namespace: so1-fase2
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
@@ -20,22 +22,34 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: balanced-service
+            name: python-api-service
             port:
               number: 80
 
 ---
-# SERVICE BALANCEADO - 50/50 entre APIs
-apiVersion: v1
-kind: Service
+# # Ingress Para NodeJS API
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: balanced-service
+  name: nodejs-api-ingress-canary
   namespace: so1-fase2
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    # Configuración canary para 50% del tráfico
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "50"
 spec:
-  selector:
-    # Este selector captura AMBAS aplicaciones que tengan este label
-    tier: api
-  ports:
-  - port: 80
-    targetPort: 5000  # Puerto común para ambas APIs
-  sessionAffinity: None  # Sin afinidad de sesión para mejor balanceo 50/50
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /metricas
+        pathType: Prefix
+        backend:
+          service:
+            name: nodejs-api-service
+            port:
+              number: 80

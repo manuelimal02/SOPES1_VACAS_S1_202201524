@@ -35,6 +35,8 @@ spec:
         - containerPort: 5000
         imagePullPolicy: Never
         env:
+        - name: PYTHON_PORT
+          value: "5000"
         - name: DB_HOST
           value: "mysql-service"
         - name: DB_PORT
@@ -88,11 +90,11 @@ spec:
       - name: nodejs-api
         image: sopes1-f2-api-node:latest
         ports:
-        - containerPort: 5000
+        - containerPort: 4000
         imagePullPolicy: Never
         env:
-        - name: PORT
-          value: "5000" 
+        - name: NODE_PORT
+          value: "4000" 
         - name: DB_HOST
           value: "mysql-service"
         - name: DB_PORT
@@ -117,5 +119,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 5000 
+      targetPort: 4000 
   type: ClusterIP
