@@ -6,10 +6,27 @@ import { io } from 'socket.io-client';
 import './App.css';
 
 function App() {
+  const [ultimaActualizacion, setUltimaActualizacion] = useState('');
   const [selectedChart, setSelectedChart] = useState('todos');
-  const [ramData, setRamData] = useState(null);
-  const [cpuData, setCpuData] = useState(null);
-  const [procesosData, setProcesosData] = useState(null);
+  const [ramData, setRamData] = useState({
+    title: "Uso de Memoria RAM",
+    labels: ["Libre", "Usada"],
+    series: [0, 0],
+    totalGB: 0,
+    porcentajeUso: 0
+  });
+
+  const [cpuData, setCpuData] = useState({
+    title: "Uso de CPU",
+    labels: ["Libre", "Usada"],
+    series: [0, 0]
+  });
+
+  const [procesosData, setProcesosData] = useState({
+    title: "Estado De Los Procesos",
+    labels: ['Totales', 'Corriendo', 'Parados', 'Zombie', 'Durmiendo'],
+    series: [0, 0, 0, 0, 0]
+  });
 
   useEffect(() => {
     const socket = io(`http://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`);
@@ -20,6 +37,12 @@ function App() {
 
     socket.on('nueva-metrica', (metricas) => {
       const ultima = metricas[0];
+
+      if (ultima.fecha_creacion) {
+        const fecha = new Date(ultima.fecha_creacion);
+        setUltimaActualizacion(fecha.toLocaleString('es-ES'));
+      }
+
       
       setRamData({
         title: "Uso de Memoria RAM",
@@ -67,6 +90,9 @@ function App() {
     <div className="App">
       <div className="navbar">
         <h2>Monitor de Sistema</h2>
+        <p className="ultima-actualizacion">
+          {ultimaActualizacion && `Última actualización: ${ultimaActualizacion}`}
+        </p>
         <div className="navbar-buttons">
           <button className="btn-all" onClick={() => setSelectedChart('todos')}>Todos</button>
           <button className="btn-ram" onClick={() => setSelectedChart('ram')}>RAM</button>

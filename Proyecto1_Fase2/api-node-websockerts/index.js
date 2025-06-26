@@ -55,24 +55,33 @@ async function ObtenerUltimasMetricas() {
   }
 }
 
-// WebSocket
+// WebSocket - CORREGIDO
 io.on('connection', (socket) => {
   console.log('Cliente Conectado Vía WebSocket:', socket.id);
-  // Enviar datos inmediatamente al conectar
-  EnviarMetricas(socket);
+
   socket.on('disconnect', () => {
     console.log('Cliente Desconectado:', socket.id);
   });
 });
 
-// Función que envía métricas cada segundo
-async function EnviarMetricas(socket = null) {
+let ultimaMetricaEnviada = null;
+
+async function EnviarMetricas() {
     const metricas = await ObtenerUltimasMetricas();
-    console.log('Enviando Métricas:', metricas);
-    if (socket) {
-      socket.emit('nueva-metrica', metricas);
-    } else {
+    
+    if (metricas.length === 0) {
+        console.log('No Hay Métricas En La Base De Datos');
+        return;
+    }
+
+    const metricaActual = metricas[0];
+
+    if (!ultimaMetricaEnviada || metricaActual.id !== ultimaMetricaEnviada.id) {
+      ultimaMetricaEnviada = metricaActual;
+      console.log('Enviando Nueva métrica:', metricaActual);
       io.emit('nueva-metrica', metricas);
+    } else {
+        console.log('No Hay Métricas En Tiempo Real');
     }
 }
 

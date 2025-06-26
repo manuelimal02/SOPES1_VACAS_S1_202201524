@@ -21,21 +21,6 @@ check_status() {
     fi
 }
 
-# Detener Y Eliminar Contenedores Docker
-cd "$PROJECT_ROOT" || { echo "Error: No Se Pudo Acceder A: $PROJECT_ROOT."; exit 1; }
-
-if [ -f "docker-compose.yml" ] || [ -f "docker-compose.yaml" ]; then
-    if docker compose version &> /dev/null; then
-        docker compose down
-    else
-        docker-compose down
-    fi
-    check_status "docker-compose down"
-    echo "Contenedores Docker Detenidos Y Eliminados."
-else
-    echo "Advertencia: No Se Encontró docker-compose.yml"
-fi
-
 # Cambiar Al Directorio De Módulos Y Limpiar
 cd "$MODULE_DIR" || { echo "Error: No Se Pudo Acceder A: $MODULE_DIR."; exit 1; }
 

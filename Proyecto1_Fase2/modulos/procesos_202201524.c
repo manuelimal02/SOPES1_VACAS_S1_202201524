@@ -39,32 +39,33 @@ static void get_process_stats(struct process_stats *stats) {
     for_each_process(task) {
         stats->total++;
         
-        
-        #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
-            state = READ_ONCE(task->__state);
-        #else
-            state = task->state;
-        #endif
-        
-        switch (state) {
-            case TASK_RUNNING:
-                stats->running++;
-                break;
-            case TASK_INTERRUPTIBLE:
-            case TASK_UNINTERRUPTIBLE:
-                stats->sleeping++;
-                break;
-            case __TASK_STOPPED:
-            case __TASK_TRACED:
-                stats->stopped++;
-                break;
-            case EXIT_ZOMBIE:
-            case EXIT_DEAD:
-                stats->zombie++;
-                break;
-            default:
-                stats->sleeping++;
-                break;
+        if (task->exit_state == EXIT_ZOMBIE || task->exit_state == EXIT_DEAD) {
+            stats->zombie++;
+        }
+        else {
+            // Obtener el estado actual
+            #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+                state = READ_ONCE(task->__state);
+            #else
+                state = task->state;
+            #endif
+            
+            switch (state) {
+                case TASK_RUNNING:
+                    stats->running++;
+                    break;
+                case TASK_INTERRUPTIBLE:
+                case TASK_UNINTERRUPTIBLE:
+                    stats->sleeping++;
+                    break;
+                case TASK_STOPPED:
+                case TASK_TRACED:
+                    stats->stopped++;
+                    break;
+                default:
+                    stats->sleeping++;
+                    break;
+            }
         }
     }
     rcu_read_unlock();

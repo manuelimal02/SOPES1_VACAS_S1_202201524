@@ -93,8 +93,7 @@
 
 .procesos-container {
     margin: 30px auto;
-    max-width: 800px;
-    background-color: white;
+    background-color: rgb(199, 199, 199);
     padding: 30px;
     border-radius: 16px;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
@@ -103,4 +102,9 @@
 .procesos-container:hover {
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
+}
+.ultima-actualizacion {
+    font-size: 14px;
+    color: #ecf0f1;
+    margin-top: 5px;
 }

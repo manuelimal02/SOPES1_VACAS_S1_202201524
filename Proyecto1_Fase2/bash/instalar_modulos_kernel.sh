@@ -39,7 +39,7 @@ for module in "${MODULES[@]}"; do
 done
 
 # Verificar Que Los Módulos Están Cargados
-echo "Verificando módulos cargados..."
+echo "Verificando Módulos Cargados:"
 for module in "${MODULES[@]}"; do
     if lsmod | grep -q "$module"; then
         echo "Módulo $module cargado correctamente."
@@ -62,31 +62,5 @@ for module in "${MODULES[@]}"; do
     fi
 done
 
-# Mostrar información de comparación del sistema
-echo "========================================"
-echo "INFORMACIÓN DEL SISTEMA PARA COMPARACIÓN:"
-echo "========================================"
-
-echo "--- CPU ---"
-echo "Uso de CPU actual (top):"
-top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%us,//'
-
-echo ""
-echo "--- RAM ---"
-echo "Información de memoria (free -m):"
-free -m | awk 'NR==2{printf "Total: %sMB, Usado: %sMB, Libre: %sMB, Porcentaje: %.2f%%\n", $2, $3, $4, $3*100/$2}'
-
-echo ""
-echo "--- PROCESOS ---"
-echo "Estados de procesos actuales:"
-echo "Total procesos: $(ps aux | tail -n +2 | wc -l)"
-echo "Procesos corriendo: $(ps aux | awk '$8 ~ /^R/ {count++} END {print count+0}')"
-echo "Procesos durmiendo: $(ps aux | awk '$8 ~ /^S/ {count++} END {print count+0}')"
-echo "Procesos zombie: $(ps aux | awk '$8 ~ /^Z/ {count++} END {print count+0}')"
-echo "Procesos parados: $(ps aux | awk '$8 ~ /^T/ {count++} END {print count+0}')"
-
-echo ""
-echo "========================================"
-echo "Carga y configuración completadas."
-echo "========================================"
+echo "Proceso Completado Exitosamente."
 exit 0
