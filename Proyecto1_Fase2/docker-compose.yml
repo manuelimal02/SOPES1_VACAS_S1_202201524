@@ -1,38 +1,20 @@
 version: '3.8'
 
 services:
-  # MySQL
-  mysql:
-    image: mysql:8.0
-    container_name: sopes1-mysql-contenedor
+# API GOLANG
+  golang-recolector:
+    image: manuelima/sopes1-f2-api-golang
+    container_name: sopes1-golang-recolector-contenedor
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: manuel123
-      MYSQL_DATABASE: proyecto1_fase2
-      TZ: America/Guatemala
     ports:
-      - "3306:3306"
+      - "6000:6000"
     volumes:
-      # Volumen De Datos
-      - mysql_proyecto_data:/var/lib/mysql
-      # Sincronizar zona horaria con el sistema host
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - sopes1_network_fase2
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
-
-# VOLUMENES
-volumes:
-  mysql_proyecto_data:
-    driver: local
-
-# REDES
-networks:
-  sopes1_network_fase2:
-    driver: bridge
+      # Montar /proc
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    privileged: true
+    security_opt:
+      - "apparmor=unconfined"
+      - "seccomp=unconfined"
+    environment:
+      - PROC_PATH=/host/proc
