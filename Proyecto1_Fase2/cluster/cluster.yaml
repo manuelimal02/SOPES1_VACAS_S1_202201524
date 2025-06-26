@@ -1,5 +1,5 @@
 # ==========================================
-# 1. NAMESPACE - so1_Fase2 
+# NAMESPACE - so1_Fase2 
 # ==========================================
 apiVersion: v1
 kind: Namespace
@@ -8,32 +8,31 @@ metadata:
 
 ---
 # ==========================================
-# 2. PYTHON API DEPLOYMENT 
+# PYTHON API DEPLOYMENT 
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: python-api
+  name: pod-python-api
   namespace: so1-fase2
   labels:
-    app: python-api
+    app: pod-python-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: python-api
+      app: pod-python-api
   template:
     metadata:
       labels:
-        app: python-api
+        app: pod-python-api
         tier: api
     spec:
       containers:
-      - name: python-api
-        image: sopes1-f2-api-python:latest
+      - name: pod-python-api-contenedor
+        image: manuelima/sopes1-f2-api-python:latest
         ports:
         - containerPort: 5000
-        imagePullPolicy: Never
         env:
         - name: PYTHON_PORT
           value: "5000"
@@ -49,15 +48,15 @@ spec:
           value: "manuel123"
 
 ---
-# Service para Python API
+# Service Python API 
 apiVersion: v1
 kind: Service
 metadata:
-  name: python-api-service
+  name: pod-python-api-service
   namespace: so1-fase2
 spec:
   selector:
-    app: python-api
+    app: pod-python-api
   ports:
     - protocol: TCP
       port: 80
@@ -66,32 +65,31 @@ spec:
 
 ---
 # ==========================================
-# 3. NODEJS API DEPLOYMENT
+# NODEJS API DEPLOYMENT
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nodejs-api
+  name: pod-nodejs-api-1
   namespace: so1-fase2
   labels:
-    app: nodejs-api
+    app: pod-nodejs-api-1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nodejs-api
+      app: pod-nodejs-api-1
   template:
     metadata:
       labels:
-        app: nodejs-api
+        app: pod-nodejs-api-1
         tier: api 
     spec:
       containers:
-      - name: nodejs-api
-        image: sopes1-f2-api-node:latest
+      - name: pod-nodejs-api-1-contenedor
+        image: manuelima/sopes1-f2-api-node:latest
         ports:
         - containerPort: 4000
-        imagePullPolicy: Never
         env:
         - name: NODE_PORT
           value: "4000" 
@@ -107,15 +105,15 @@ spec:
           value: "manuel123"
 
 ---
-# Service para NodeJS API
+# Service NodeJS API 1
 apiVersion: v1
 kind: Service
 metadata:
-  name: nodejs-api-service
+  name: pod-nodejs-api-1-service
   namespace: so1-fase2
 spec:
   selector:
-    app: nodejs-api
+    app: pod-nodejs-api-1
   ports:
     - protocol: TCP
       port: 80

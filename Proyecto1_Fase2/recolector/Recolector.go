@@ -87,7 +87,7 @@ func readRAMData() {
 			default:
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
 
@@ -121,7 +121,7 @@ func readCPUData() {
 			default:
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
 
@@ -162,7 +162,7 @@ func readProcessData() {
 			default:
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
 
@@ -185,7 +185,7 @@ func main() {
 			Buffer.RamLibre = ram.Libre
 			Buffer.UsoRam = ram.Usado
 			Buffer.PorcentajeRam = ram.PorcentajeUso
-		case <-time.After(2 * time.Second):
+		case <-time.After(time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de RAM"})
 		}
 		// Obtener datos de CPU
@@ -193,7 +193,7 @@ func main() {
 		case cpu := <-cpuChan:
 			Buffer.PorcentajeCPUUso = cpu.PorcentajeUso
 			Buffer.PorcentajeCPULibre = 100.0 - cpu.PorcentajeUso
-		case <-time.After(2 * time.Second):
+		case <-time.After(time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de CPU"})
 		}
 		// Obtener datos de Procesos
@@ -204,7 +204,7 @@ func main() {
 			Buffer.ProcesosDurmiendo = process.ProcesosDurmiendo
 			Buffer.ProcesosZombie = process.ProcesosZombie
 			Buffer.ProcesosParados = process.ProcesosParados
-		case <-time.After(2 * time.Second):
+		case <-time.After(time.Second):
 			return c.Status(500).JSON(fiber.Map{"error": "Tiempo de espera agotado para datos de Procesos"})
 		}
 		Buffer.HoraFecha = time.Now().Format("2006-01-02 15:04:05")

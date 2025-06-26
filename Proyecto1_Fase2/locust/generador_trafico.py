@@ -2,8 +2,8 @@ from locust import HttpUser, TaskSet, task, between, events
 import json
 import threading
 
-resultados = []
-lock = threading.Lock()
+Metricas = []
+Index_Lock = threading.Lock()
 
 class MetricsBehavior(TaskSet):
     @task
@@ -12,13 +12,13 @@ class MetricsBehavior(TaskSet):
             if response.status_code == 200:
                 try:
                     data = response.json()
-                    with lock:
-                        resultados.append(data)
+                    with Index_Lock:
+                        Metricas.append(data)
                     response.success()
                 except json.JSONDecodeError:
-                    response.failure("No es un JSON válido")
+                    response.failure("JSON No Válido")
             else:
-                response.success()
+                response.failure(f"Error HTTP: {response.status_code}")
 
 class WebsiteUser(HttpUser):
     tasks = [MetricsBehavior]
@@ -27,5 +27,5 @@ class WebsiteUser(HttpUser):
 @events.quitting.add_listener
 def guardar_resultado(environment, **kwargs):
     with open("Metricas_Totales.json", "w") as f:
-        json.dump(resultados, f, indent=4)
-    print(f"\nSe Guardaron: {len(resultados)} Registros en 'Metricas_Totales.json'")
+        json.dump(Metricas, f, indent=4)
+    print(f"\nSe Guardaron: {len(Metricas)} Registros en 'Metricas_Totales.json'")
