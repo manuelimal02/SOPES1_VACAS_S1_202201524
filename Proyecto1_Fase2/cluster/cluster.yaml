@@ -65,7 +65,7 @@ spec:
 
 ---
 # ==========================================
-# NODEJS API DEPLOYMENT
+# NODEJS 1 API DEPLOYMENT
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
@@ -118,4 +118,61 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 4000 
+  type: ClusterIP
+
+---
+# ==========================================
+# NODEJS WEBSOCKET API DEPLOYMENT
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-nodejs-api-2-websocket
+  namespace: so1-fase2
+  labels:
+    app: pod-nodejs-api-2-websocket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-nodejs-api-2-websocket
+  template:
+    metadata:
+      labels:
+        app: pod-nodejs-api-2-websocket
+        tier: api 
+    spec:
+      containers:
+      - name: pod-nodejs-api-2-websocket-contenedor
+        image: manuelima/sopes1-f2-api-nodejs-websockets:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: NODE_PORT
+          value: "8000" 
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "proyecto1_fase2"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "manuel123"
+
+---
+# Service NodeJS API 2 Websocket
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-nodejs-api-2-websocket-service
+  namespace: so1-fase2
+spec:
+  selector:
+    app: pod-nodejs-api-2-websocket
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000 
   type: ClusterIP
