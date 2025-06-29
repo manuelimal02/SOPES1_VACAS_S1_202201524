@@ -1,8 +1,4 @@
-# ==========================================
-# INGRESS Y TRAFFIC SPLIT
-# ==========================================
-
-# Ingress Python API
+# Ingress principal (Python API)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -27,17 +23,14 @@ spec:
               number: 80
 
 ---
-# # Ingress NodeJS API
+# Ingress canary (NodeJS API)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nodejs-api-ingress
+  name: nodejs-api-canary-ingress
   namespace: so1-fase2
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/canary: "true"
     nginx.ingress.kubernetes.io/canary-weight: "50"
 spec:

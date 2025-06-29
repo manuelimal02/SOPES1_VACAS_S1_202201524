@@ -1,5 +1,5 @@
 # ==========================================
-# NAMESPACE - so1_Fase2 
+# NAMESPACE
 # ==========================================
 apiVersion: v1
 kind: Namespace
@@ -21,11 +21,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pod-python-api
+      app: deployment-python-api
   template:
     metadata:
       labels:
-        app: pod-python-api
+        app: deployment-python-api
         tier: api
     spec:
       containers:
@@ -37,7 +37,7 @@ spec:
         - name: PYTHON_PORT
           value: "5000"
         - name: DB_HOST
-          value: "mysql-service"
+          value: "34.41.227.54"  
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -45,7 +45,10 @@ spec:
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
-          value: "manuel123"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
 
 ---
 # Service Python API 
@@ -56,7 +59,7 @@ metadata:
   namespace: so1-fase2
 spec:
   selector:
-    app: pod-python-api
+    app: deployment-python-api
   ports:
     - protocol: TCP
       port: 80
@@ -78,11 +81,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pod-nodejs-api-1
+      app: deployment-nodejs-api-1
   template:
     metadata:
       labels:
-        app: pod-nodejs-api-1
+        app: deployment-nodejs-api-1
         tier: api 
     spec:
       containers:
@@ -94,7 +97,7 @@ spec:
         - name: NODE_PORT
           value: "4000" 
         - name: DB_HOST
-          value: "mysql-service"
+          value: "34.41.227.54"  
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -102,7 +105,10 @@ spec:
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
-          value: "manuel123"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
 
 ---
 # Service NodeJS API 1
@@ -113,7 +119,7 @@ metadata:
   namespace: so1-fase2
 spec:
   selector:
-    app: pod-nodejs-api-1
+    app: deployment-nodejs-api-1
   ports:
     - protocol: TCP
       port: 80
@@ -135,11 +141,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pod-nodejs-api-2-websocket
+      app: deployment-nodejs-api-2-websocket
   template:
     metadata:
       labels:
-        app: pod-nodejs-api-2-websocket
+        app: deployment-nodejs-api-2-websocket
         tier: api 
     spec:
       containers:
@@ -151,7 +157,7 @@ spec:
         - name: NODE_PORT
           value: "8000" 
         - name: DB_HOST
-          value: "mysql-service"
+          value: "34.41.227.54"  
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
@@ -159,7 +165,10 @@ spec:
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
-          value: "manuel123"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
 
 ---
 # Service NodeJS API 2 Websocket
@@ -170,9 +179,9 @@ metadata:
   namespace: so1-fase2
 spec:
   selector:
-    app: pod-nodejs-api-2-websocket
+    app: deployment-nodejs-api-2-websocket
   ports:
     - protocol: TCP
-      port: 80
+      port: 8000
       targetPort: 8000 
-  type: ClusterIP
+  type: LoadBalancer
