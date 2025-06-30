@@ -28,7 +28,7 @@ const ConfigBD = {
   database: process.env.DB_NAME
 };
 
-// Establecer conexión a la base de datos
+// Establecer Conexion Con La Base De Datos
 async function EstablecerConexionBD() {
   try {
     const ConexionBD = await mysql.createConnection(ConfigBD);
@@ -55,7 +55,7 @@ async function ObtenerUltimasMetricas() {
   }
 }
 
-// WebSocket - CORREGIDO
+// WebSocket
 io.on('connection', (socket) => {
   console.log('Cliente Conectado Vía WebSocket:', socket.id);
 
@@ -85,6 +85,7 @@ async function EnviarMetricas() {
     }
 }
 
+// Enviar Métrica Cada Segundo
 setInterval(() => {
   EnviarMetricas();
 }, 1000);

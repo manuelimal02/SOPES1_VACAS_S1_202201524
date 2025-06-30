@@ -1,4 +1,4 @@
-# Manual Técnico - Monitor de Servicios Linux
+# Manual Técnico - Monitoreo Cloud de VMs
 
 ## Datos Personales
 
@@ -17,196 +17,231 @@
 | **Catedrático:** | Ing. Edgar René Ornelis Hoil |
 | **Auxiliar:** | Diego Alejandro Juárez Brán |
 | **Período:** | Escuela de Vacaciones Junio 2025 |
-| **Proyecto:** | Fase 1 - Monitor de Servicios Linux |
+| **Proyecto:** | Fase 2 - Monitoreo Cloud de VMs |
 
 ## Resumen
 
-El proyecto consiste en el desarrollo de un sistema de monitoreo de recursos del sistema Linux mediante la implementación de módulos de kernel en C, un agente de monitoreo en Golang, una API REST en NodeJS, una base de datos para almacenar la información obtenida y una interfaz web para visualización en tiempo real. El sistema utiliza contenedores Docker para su despliegue.
+El proyecto Fase 2 extiende el sistema de monitoreo desarrollado en la Fase 1, implementando una arquitectura cloud-native que utiliza Kubernetes para orquestación, Google Cloud Platform para servicios en la nube, y herramientas de pruebas de carga para evaluar el rendimiento de una VM. El sistema incluye múltiples APIs, websockets para comunicación en tiempo real, y un frontend desplegado en la nube para visualización interactiva de métricas del sistema.
 
 ## Arquitectura del Sistema
 
 ### Descripción General
-El sistema está compuesto por varios componentes que trabajan de manera integrada:
+El sistema está compuesto por varios componentes distribuidos en la nube:
 
-1. **Módulos de Kernel (C)**: Obtienen métricas de RAM y CPU directamente del kernel de Linux.
-2. **Agente de Monitoreo (Golang)**: Recopila datos de los módulos y los procesa para ser enviados mediante archivos JSON.
-3. **API REST (NodeJS)**: Gestiona la comunicación y persistencia de datos por medio de una base de datos.
-4. **Frontend (React)**: Interfaz de usuario para visualización de las métricas obtenidas en tiempo real.
-5. **Base de Datos (SQL)**: Almacenamiento persistente de métricas.
-6. **Scripts de Automatización (Bash)**: Gestión de despliegue de contenedores, módulos y configuración para el sistema.
+1. **Módulos de Kernel (C)**: Obtienen métricas de RAM, CPU y procesos directamente del kernel de Linux en la VM.
+2. **VM en Compute Engine**: Máquina virtual Ubuntu que ejecuta los módulos de kernel y el agente de monitoreo.
+3. **Agente de Monitoreo (Golang)**: Contenedorizado y desplegado en la VM, recopila datos de los módulos.
+4. **Generador de Tráfico (Locust + Python)**: Ejecutado localmente, simula usuarios y genera cargas de trabajo contra la VM.
+5. **Kubernetes Cluster (GKE)**: Orquesta todos los servicios en la nube y gestiona el balanceamiento de carga.
+6. **Traffic Split e Ingress**: Distribuye el tráfico 50/50 entre las dos rutas de API en Kubernetes.
+7. **API Python (Ruta 1)**: Desplegada en Kubernetes, procesa y almacena datos en Cloud SQL.
+8. **API NodeJS (Ruta 2)**: Desplegada en Kubernetes, alternativa para procesamiento y almacenamiento de datos.
+9. **API WebSocket (NodeJS)**: Desplegada en Kubernetes, maneja comunicación en tiempo real con el frontend.
+10. **Cloud SQL (MySQL)**: Base de datos administrada para persistencia de métricas.
+11. **Cloud Run**: Servicio serverless para despliegue del frontend React.
+12. **Frontend React**: Dashboard interactivo con comunicación por websockets.
 
 ### Flujo de Datos
 ```
-Módulos Kernel → Agente Golang → API NodeJS 
-                                     ↓
-            Frontend React ← Métricas Obtenidas → Base de Datos
+              VM en Compute Engine
+         ┌─────────────────────────────┐
+         │ Módulos Kernel → Agente Go  │ ← Locust (Local)  
+         └─────────────────────────────┘
+                        ↓
+                  Locust (Local)  
+                        ↓
+                Kubernetes Cluster
+           ┌─────────────────────────┐
+           │ Ingress + Traffic Split │
+           │    ↙            ↘       │
+           │ API Python  API NodeJS  │
+           │   (50%)      (50%)      │
+           │    ↓            ↓       │
+           │         ↘    ↙          │
+           │    WebSocket API        │
+           └─────────────────────────┘
+                     ↓
+    Cloud SQL ← Métricas → Frontend React (Cloud Run)
 ```
+
+## Google Cloud Platform (GCP) - Servicios Utilizados
+
+### Cloud SQL
+- **Propósito**: Base de datos MySQL totalmente administrada.
+- **Funcionalidad**: 
+  - Almacenamiento escalable y seguro de métricas.
+  - Conexión desde APIs Python y NodeJS.
+
+### Cloud Run
+- **Propósito**: Plataforma serverless para contenedores.
+- **Funcionalidad**:
+  - Despliegue del frontend React sin gestión de infraestructura.
+  - Integración nativa con otros servicios de GCP.
+
+### Google Kubernetes Engine (GKE)
+- **Propósito**: Orquestación de contenedores administrada.
+- **Funcionalidad**:
+  - Gestión del clúster Kubernetes.
+  - Escalamiento automático de pods y nodos.
+  - Balanceamiento de carga nativo.
+
+### Compute Engine (VM Objetivo)
+- **Propósito**: Máquina virtual objetivo para pruebas de carga y monitoreo.
+- **Especificaciones**:
+  - Sistema Operativo: Ubuntu 22.04.
+  - Instalación de módulos de kernel personalizados.
+  - Docker instalado para contenedores.
+- **Funcionalidad**:
+  - Hosting del agente de monitoreo Golang contenedorizado.
+  - Ejecución de módulos de kernel para recolección de métricas.
+  - Objetivo de las pruebas de carga generadas por Locust.
+  - Contenedor de estrés (polinux/stress) para variación de métricas.
+  - API REST En Golang expuesta para recepción de peticiones de Locust.
 
 ## Tecnologías Utilizadas
 
+### Kubernetes
+- **Propósito**: Orquestación y gestión de contenedores.
+- **Funcionalidad**:
+  - Namespace `so1_fase2` para aislamiento de recursos.
+  - Gestión de pods, servicios y deployments.
+  - Configuración de Ingress para exposición de servicios.
+  - Traffic splitting para balanceamiento de carga.
+
+### Locust
+- **Propósito**: Generación de tráfico y pruebas de carga.
+- **Funcionalidad**:
+  - Simulación de 300 usuarios concurrentes para recolección inicial.
+  - Generación de aproximadamente 2000 registros JSON.
+  - Simulación de 150 usuarios para envío de datos al traffic split.
+  - Configuración de tiempos de espera entre 1-4 segundos.
+
+### Docker & Docker Hub
+- **Propósito**: Contenerización y distribución de aplicaciones.
+- **Funcionalidad**:
+  - Imágenes publicadas en Docker Hub para todas las aplicaciones.
+  - Agente Golang contenedorizado.
+  - APIs Python y NodeJS contenedorizadas.
+  - Contenedor de estrés (polinux/stress) para variación de métricas.
+
+### WebSockets (Socket.IO)
+- **Propósito**: Comunicación en tiempo real entre frontend y backend.
+- **Funcionalidad**:
+  - Canal de comunicación bidireccional.
+  - Optimización para manejo de gran cantidad de información.
+  - Actualización en tiempo real de métricas en el dashboard.
+
 ### React
-- **Propósito**: Desarrollo del frontend y interfaz de usuario.
+- **Propósito**: Desarrollo del frontend con comunicación en tiempo real.
 - **Funcionalidad**: 
-  - Visualización de gráficas en tiempo real.
-  - Dashboard interactivo para monitoreo.
-  - Consumo de API REST para obtención de datos.
+  - Dashboard interactivo desplegado en Cloud Run.
+  - Gráficas en tiempo real de CPU y RAM.
+  - Tabla con información detallada de procesos.
+  - Integración con Socket.IO para comunicación WebSocket.
+
+### Python
+- **Propósito**: Desarrollo de API REST (Ruta 1) y scripts de Locust.
+- **Funcionalidad**:
+  - API REST para procesamiento y almacenamiento de datos.
+  - Conexión con Cloud SQL MySQL.
 
 ### Node.js
-- **Propósito**: Desarrollo de la API REST del backend.
+- **Propósito**: Desarrollo de APIs (Ruta 2 y WebSocket).
 - **Funcionalidad**:
-  - Exposición de endpoints para comunicación con frontend.
-  - Gestión de peticiones HTTP.
-  - Comunicación con la base de datos para la persistencia.
-  - Procesamiento de datos JSON recibidos del recolector Golang.
+  - API REST alternativa para comparación de rendimiento.
+  - API WebSocket para comunicación en tiempo real.
+  - Conexión con Cloud SQL MySQL.
 
 ### Golang
-- **Propósito**: Desarrollo del agente de monitoreo.
+- **Propósito**: Agente de monitoreo contenedorizado.
 - **Funcionalidad**:
-  - Lectura de módulos de kernel mediante rutinas concurrentes.
-  - Procesamiento y parseo de datos a formato JSON.
-  - Implementación de canales para comunicación entre goroutines.
-  - Envío periódico de métricas a la API.
+  - Imagen descargada desde Docker Hub.
+  - Recopilación de métricas de módulos de kernel.
+  - Procesamiento concurrente de datos.
+  - Generación de JSON con métricas del sistema.
 
 ### C
-- **Propósito**: Desarrollo de módulos de kernel.
+- **Propósito**: Desarrollo de módulos de kernel extendidos.
 - **Funcionalidad**:
-  - Acceso directo a estructuras de datos del kernel.
-  - Obtención de métricas de CPU y RAM.
-  - Creación de archivos en /proc para exposición de datos.
-  - Implementación de funciones de lectura del kernel.
-
-### Makefile
-- **Propósito**: Automatización de compilación de módulos de kernel.
-- **Funcionalidad**:
-  - Compilación automática de módulos (.ko).
-  - Limpieza de archivos temporales.
-  - Instalación y desinstalación de módulos.
-
-### Archivos Bash (.sh)
-- **Propósito**: Automatización de tareas del sistema.
-- **Funcionalidad**:
-  - Script de despliegue de contenedores para estresar la computadora.
-  - Script de instalación y configuración de módulos kernel.
-  - Script de limpieza y eliminación de servicios (módulos y contenedores).
-  - Script de despliegue de la aplicación completa (módulos y contenedores).
-
-### SQL
-- **Propósito**: Gestión de base de datos para persistencia.
-- **Funcionalidad**:
-  - Almacenamiento de métricas obtenidas en tiempo real.
-  - Gestión de esquemas de tablas.
-
-### Docker
-- **Propósito**: Contenerización de servicios.
-- **Funcionalidad**:
-  - Encapsulación del agente de monitoreo.
-  - Contenerización de la API NodeJS.
-  - Contenerización del frontend React.
-  - Gestión de la base de datos mediante contenedor.
-
-### Dockerfile
-- **Propósito**: Definición de imágenes de contenedores personalizadas.
-- **Funcionalidad**:
-  - Especificación del entorno base y dependencias.
-  - Automatización del proceso de construcción de imágenes.
-  - Configuración de comandos de ejecución y puntos de entrada.
-  - Definición de variables de entorno y configuraciones específicas.
-
-### Docker Compose
-- **Propósito**: Orquestación de múltiples contenedores.
-- **Funcionalidad**:
-  - Gestión de servicios multi-contenedor.
-  - Configuración de redes entre contenedores.
-  - Gestión de volúmenes para persistencia.
-  - Simplificación del despliegue completo.
-
-### Docker Hub
-- **Propósito**: Repositorio de imágenes de contenedores.
-- **Funcionalidad**:
-  - Almacenamiento de imágenes personalizadas.
-  - Distribución de imágenes para despliegue.
+  - Módulo de RAM.
+  - Módulo de CPU.
+  - **Nuevo**: Módulo de procesos (`procesos_202201524`).
+  - Exposición de datos en `/proc` para lectura del agente.
 
 ## Componentes del Sistema
 
-### Módulos de Kernel
+### Máquina Virtual en Compute Engine
 
-#### Módulo de RAM
-- **Ubicación**: `/proc/ram_202201524`
-- **Librerías**: `<sys/sysinfo.h>`, `<linux/mm.h>`.
-- **Funcionalidad**: Obtiene información de memoria RAM directamente de estructuras del kernel.
-- **Formato de salida**: JSON con métricas de memoria total, utilizada y disponible.
+#### Especificaciones de la VM
+- **Sistema Operativo**: Ubuntu 22.04.
+- **Ubicación**: Google Cloud Platform - Compute Engine.
+- **Propósito**: VM objetivo para pruebas de carga y recolección de métricas.
 
-#### Módulo de CPU
-- **Ubicación**: `/proc/cpu_202201524`
-- **Librerías**: `<linux/sched.h>`, `<linux/sched/signal.h>`.
-- **Funcionalidad**: Obtiene información de CPU y procesos del sistema.
-- **Formato de salida**: JSON con métricas de utilización de CPU.
+#### Componentes Instalados en la VM
+- **Módulos de Kernel**: Los tres módulos desarrollados en C instalados directamente.
+- **Docker**: Para ejecución del agente de monitoreo contenedorizado.
 
-### Agente de Monitoreo (Golang)
-- **Contenedor**: Dockerizado para portabilidad.
-- **Concurrencia**: Utiliza goroutines para lecturas paralelas.
-- **Comunicación**: Canales para sincronización entre rutinas.
-- **Funcionalidad**: Lectura periódica de módulos y envío de datos a API.
+#### Configuración y Despliegue
+- **Instalación de Módulos**: Scripts automatizados para compilación e instalación.
+- **Contenedor de Estrés**: `polinux/stress` para generar variaciones en métricas.
+- **Networking**: Configuración para recibir tráfico desde Locust (local) y enviar datos a Kubernetes.
+- **Monitoreo**: Exposición de métricas a través de `/proc` para lectura del agente.
+- **Fase 1**: Generación de 300 usuarios simulados por 3 minutos.
+- **Fase 2**: Envío de datos con 150 usuarios al traffic split.
+- **Contenedor de Estrés**: Utiliza `polinux/stress` para variación de métricas.
+- **Salida**: JSON con aproximadamente 2000 registros de métricas.
 
-### API REST (NodeJS)
-- **Endpoints**: Servicios para lectura y escritura de métricas.
-- **Base de datos**: Conexión con sistema de persistencia SQL.
-- **Middleware**: Gestión de CORS y autenticación.
-- **Formato**: Intercambio de datos en JSON.
+### Infraestructura Kubernetes
 
-### Frontend (React)
-- **Componentes**: Dashboard con gráficas en tiempo real.
-- **Visualización**: Gráficas de CPU y RAM con actualización automática.
-- **Comunicación**: Consumo de API REST mediante fetch y axios.
+#### Namespace
+- **Nombre**: `so1_fase2`
+- **Propósito**: Aislamiento de recursos del proyecto.
 
-### Base de Datos
-- **Tipo**: SQL (MySQL).
-- **Persistencia**: Volumen Docker para mantener datos.
-- **Esquema**: Tablas para métricas de CPU y RAM con timestamps.
+#### Ingress Controller
+- **Funcionalidad**: Gestión de acceso externo a servicios HTTP/HTTPS.
+- **Traffic Split**: Distribución 50/50 entre rutas Python y NodeJS.
 
-## Scripts de Automatización
+#### Services y Deployments
+- **API Python**: Deployment y Service para la Ruta 1.
+- **API NodeJS**: Deployment y Service para la Ruta 2.
+- **WebSocket API**: Service especializado para comunicación en tiempo real.
 
-### Script de Estrés del Sistema
-```bash
-./creacion_contenedores_stress.sh
-```
+### APIs del Sistema
 
-### Script de Instalación de Módulos
-```bash
-./instalar_modulos_kernel.sh
-```
+#### API Python (Ruta 1)
+- **Endpoints**: Recepción y procesamiento de métricas JSON.
+- **Base de datos**: Conexión directa con Cloud SQL.
 
-### Script de Limpieza
-```bash
-./eliminar_servicios_utilizados.sh
-```
+#### API NodeJS (Ruta 2)
+- **Endpoints**: Alternativa para procesamiento de métricas.
+- **Base de datos**: Conexión directa con Cloud SQL.
 
-### Script de Despliegue De Contenedores
-```bash
-./desplegar_contenedores.sh
-```
+#### API WebSocket (NodeJS)
+- **Protocolo**: Socket.IO para comunicación bidireccional.
+- **Optimización**: Diseñada para manejo eficiente de gran volumen de datos.
+- **Tiempo Real**: Envío inmediato de actualizaciones al frontend.
 
-## Funcionamiento del Sistema
+### Base de Datos Cloud SQL
+- **Motor**: MySQL administrado por Google Cloud.
+- **Esquema**: Tablas para métricas con campos timestamp y identificador de API.
 
-### Flujo de Monitoreo
-1. Los módulos de kernel exponen métricas en `/proc`.
-2. El agente Golang lee periódicamente estos archivos.
-3. Los datos se procesan y envían a la API NodeJS.
-4. La API almacena los datos en la base de datos.
-5. El frontend consulta la API para mostrar gráficas en tiempo real.
-
-### Ciclo de Datos
-- **Frecuencia**: Actualización de métricas cada segundo por el agente recolector.
-- **Procesamiento**: Datos en formato JSON para su fácil manipulación.
-- **Almacenamiento**: Métricas con timestamp para análisis histórico.
-- **Visualización**: Gráficas dinámicas con datos en tiempo real.
+### Frontend React en Cloud Run
+- **Despliegue**: Serverless en Google Cloud Run.
+- **Comunicación**: WebSockets para actualizaciones en tiempo real.
+- **Visualización**:
+  - Gráfica en tiempo real del porcentaje de utilización de RAM.
+  - Gráfica en tiempo real del porcentaje de utilización de CPU.
+  - Tabla interactiva con información detallada de procesos.
 
 ## Conclusiones
 
-El proyecto integra múltiples tecnologías para crear un sistema completo de monitoreo de recursos del sistema Linux. La implementación demuestra:
+El proyecto Fase 2 representa una evolución significativa hacia una arquitectura cloud-native que demuestra:
 
-- Comprensión de programación a nivel de kernel.
-- Aplicación de principios de concurrencia en Golang.
-- Desarrollo de APIs REST escalables.
-- Implementación de interfaces de usuario.
-- Gestión de contenedores y orquestación.
+- **Dominio de orquestación**: Implementación completa de Kubernetes con traffic splitting.
+- **Integración cloud**: Uso efectivo de servicios administrados de GCP.
+- **Comunicación en tiempo real**: Implementación de WebSockets para actualizaciones instantáneas.
+- **Pruebas de rendimiento**: Metodología sistemática para evaluación de sistemas bajo carga.
+- **Arquitectura distribuida**: Diseño resiliente y escalable para entornos productivos.
+- **Comparación tecnológica**: Análisis objetivo del rendimiento entre diferentes stacks tecnológicos.
+
+La arquitectura implementada proporciona una base sólida para sistemas de monitoreo en producción, con capacidades de escalamiento, alta disponibilidad y análisis de rendimiento en tiempo real.
